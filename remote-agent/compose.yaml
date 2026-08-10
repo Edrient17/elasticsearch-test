@@ -1,0 +1,22 @@
+name: simple-elastic-log-agent
+
+services:
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:${STACK_VERSION:-9.4.4}
+    user: root
+    hostname: ${VM_NAME:-remote-vm}
+    command: ["filebeat", "-e", "--strict.perms=false"]
+    environment:
+      LOGSTASH_HOST: ${LOGSTASH_HOST:?Set LOGSTASH_HOST in remote-agent/.env}
+      VM_NAME: ${VM_NAME:-remote-vm}
+      COLLECT_DOCKER_LOGS: ${COLLECT_DOCKER_LOGS:-false}
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/log:/hostfs/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - filebeat-data:/usr/share/filebeat/data
+    restart: unless-stopped
+
+volumes:
+  filebeat-data:
+

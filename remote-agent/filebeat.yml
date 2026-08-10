@@ -1,0 +1,33 @@
+filebeat.inputs:
+  - type: filestream
+    id: host-system-logs
+    enabled: true
+    paths:
+      - /hostfs/var/log/*.log
+      - /hostfs/var/log/messages
+      - /hostfs/var/log/syslog
+      - /hostfs/var/log/secure
+
+  - type: filestream
+    id: host-docker-logs
+    enabled: ${COLLECT_DOCKER_LOGS:false}
+    paths:
+      - /var/lib/docker/containers/*/*.log
+    parsers:
+      - container:
+          stream: all
+          format: docker
+
+processors:
+  - add_host_metadata:
+      netinfo.enabled: true
+  - add_fields:
+      target: labels
+      fields:
+        vm_name: ${VM_NAME:remote-vm}
+
+output.logstash:
+  hosts: ["${LOGSTASH_HOST}"]
+
+logging.level: info
+
